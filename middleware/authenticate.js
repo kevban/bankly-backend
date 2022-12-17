@@ -11,8 +11,8 @@ const { SECRET_KEY } = require('../config');
  */
 function authenticateJWT(req, res, next) {
     try {
-        if (req.headers && req.headers.userToken) {
-            const token = req.headers.userToken;
+        if (req.headers && req.headers.token) {
+            const token = req.headers.token;
             res.locals.user = jwt.verify(token, SECRET_KEY)
         }
         next()

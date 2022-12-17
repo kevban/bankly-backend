@@ -3,6 +3,7 @@ const express = require('express')
 const router = new express.Router()
 const User = require('../models/user')
 const { BadRequestError } = require('../expressErrors')
+const { createToken } = require('../helpers/createJWT')
 
 router.post('/register', async function (req, res, next) {
     try {
@@ -11,8 +12,9 @@ router.post('/register', async function (req, res, next) {
             username: data.username,
             password: data.password
         })
-        res.json(response);
-    } catch(e) {
+        const token = createToken(response)
+        res.json({username: response.username, token});
+    } catch (e) {
         next(e)
     }
 })
@@ -24,7 +26,8 @@ router.post('/login', async function (req, res, next) {
             username: data.username,
             password: data.password
         })
-        res.json(user)
+        const token = createToken(user)
+        res.json({username: user.username, userId: user._id, token})
     } catch (e) {
         next(e)
     }

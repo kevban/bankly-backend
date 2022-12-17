@@ -5,7 +5,6 @@
 const express = require("express")
 const cors = require("cors")
 const plaidRoutes = require('./routes/plaid')
-const transactionRoutes = require('./routes/transactions')
 const authRoutes = require('./routes/auth')
 const { NotFoundError } = require('./expressErrors')
 const { authenticateJWT } = require('./middleware/authenticate')
@@ -18,7 +17,6 @@ app.use(express.json())
 app.use(cors())
 app.use(authenticateJWT)
 app.use("/api/plaid", plaidRoutes)
-app.use("/api/transactions", transactionRoutes)
 app.use("/api/auth", authRoutes)
 
 /** Handle 404 errors -- this matches everything */

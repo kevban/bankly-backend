@@ -1,6 +1,8 @@
 const express = require('express')
-const { getDb } = require('../db')
+const User = require('../models/user')
 const router = new express.Router()
+const { ensureLoggedIn } = require('../middleware/authenticate')
+const moment = require('moment')
 
 
 const {
@@ -10,13 +12,14 @@ const {
     plaid_client,
     PLAID_ANDROID_PACKAGE_NAME
 } = require('../config')
+const { BadRequestError } = require('../expressErrors')
 
-router.post('/create-link-token', async function (req, res, next) {
+router.post('/create-link-token', [ensureLoggedIn], async function (req, res, next) {
     const configs = {
         user: {
             client_user_id: 'user-id'
         },
-        client_name: 'Plaid Quickstart',
+        client_name: 'Piggy Bank',
         products: PLAID_PRODUCTS,
         country_codes: PLAID_COUNTRY_CODES,
         language: 'en'
@@ -34,27 +37,50 @@ router.post('/create-link-token', async function (req, res, next) {
     res.json(createTokenResponse.data);
 })
 
-router.post('/set-access-token', async function (req, res, next) {
-    const db = getDb()
+router.post('/set-access-token', [ensureLoggedIn], async function (req, res, next) {
     try {
-        const PUBLIC_TOKEN = req.body.publicToken;
+        const PUBLIC_TOKEN = req.body.public_token;
+        console.log(PUBLIC_TOKEN)
         const tokenResponse = await plaid_client.itemPublicTokenExchange({
             public_token: PUBLIC_TOKEN
         });
-        const ACCESS_TOKEN = tokenResponse.data.access_token;
-        const ITEM_ID = tokenResponse.data.item_id
-        let response = await db.collection('users').insertOne({access_token: ACCESS_TOKEN})
-        // change this later. Access token stays in server
+        const ACCESS_TOKEN = tokenResponse.data.access_token
+        await User.setAccessToken(res.locals.user.userId, ACCESS_TOKEN)
         res.json({
-            access_token: ACCESS_TOKEN,
-            userId: response.insertedId,
-            item_id: ITEM_ID, // this is for plaid support
-            error: null
+            message: 'success'
         })
     } catch (e) {
         next(e)
     }
+
+})
+
+router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
+    try {
+        // 30 days transaction
+        const startDate = moment().subtract(90, 'days').format('YYYY-MM-DD')
+        const endDate = moment().format('YYYY-MM-DD')
+        const accessToken = await User.getAccessToken(res.locals.user.userId)
+        console.log(accessToken, 'awdawed')
+        if (!accessToken) {
+            throw new BadRequestError(`User ${res.locals.user.username} is not connected to a bank yet!`)
+        }
+        const configs = {
+            access_token: accessToken,
+            start_date: startDate,
+            end_date: endDate,
+            options: {
+                count: 250, // max 
+                offset: 0
+            }
+        };
+        const transactionsResponse = await plaid_client.transactionsGet(configs);
+        res.json(transactionsResponse.data)
+    } catch (e) {
+        res.json(e)
+    }
     
+
 })
 
 
