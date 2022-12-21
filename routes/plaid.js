@@ -13,7 +13,9 @@ const {
     PLAID_ANDROID_PACKAGE_NAME
 } = require('../config')
 const { BadRequestError } = require('../expressErrors')
+const Transaction = require('../models/transaction')
 
+// generate a link token to open plaid link
 router.post('/create-link-token', [ensureLoggedIn], async function (req, res, next) {
     const configs = {
         user: {
@@ -37,6 +39,8 @@ router.post('/create-link-token', [ensureLoggedIn], async function (req, res, ne
     res.json(createTokenResponse.data);
 })
 
+// takes a public_token, and request an access token from plaid. Store it in the database
+// for that user.
 router.post('/set-access-token', [ensureLoggedIn], async function (req, res, next) {
     try {
         const PUBLIC_TOKEN = req.body.public_token;
@@ -55,32 +59,53 @@ router.post('/set-access-token', [ensureLoggedIn], async function (req, res, nex
 
 })
 
+/* Get the 30 day most recent transactions of all connected banks of an user.
+Stores the result in the database for that user
+ headers: token: user jwt
+ response: 
+{transactions: [array of transactions]}
+*/
 router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
     try {
         // 30 days transaction
-        const startDate = moment().subtract(90, 'days').format('YYYY-MM-DD')
+        const startDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
         const endDate = moment().format('YYYY-MM-DD')
-        const accessToken = await User.getAccessToken(res.locals.user.userId)
-        console.log(accessToken, 'awdawed')
-        if (!accessToken) {
+        const accessTokens = await User.getAccessToken(res.locals.user.userId)
+        if (accessTokens) {
+            const transactionArr = []
+            accessTokens.map(async (accessToken) => {
+                const configs = {
+                    access_token: accessToken,
+                    start_date: startDate,
+                    end_date: endDate,
+                    options: {
+                        count: 250, // max 
+                        offset: 0
+                    }
+                };
+                const response = await plaid_client.transactionsGet(configs);
+                
+                if (response.transactions) {
+                    response.transactions.forEach(transaction => {
+                        const accountName = response.accounts.find(account => account.account_id === transaction.account_id).official_name;
+                        const transactionObj = {
+                            ...transaction,
+                            accounts: response.accounts,
+                            account_name: accountName,
+                            user_id: res.locals.user.userId
+                        }
+                        transactionArr.push(transactionObj)
+                    })
+                }
+            })
+            await Transaction.add(transactionArr)
+            res.json({transactions: transactionArr})
+        } else {
             throw new BadRequestError(`User ${res.locals.user.username} is not connected to a bank yet!`)
         }
-        const configs = {
-            access_token: accessToken,
-            start_date: startDate,
-            end_date: endDate,
-            options: {
-                count: 250, // max 
-                offset: 0
-            }
-        };
-        const transactionsResponse = await plaid_client.transactionsGet(configs);
-        res.json(transactionsResponse.data)
     } catch (e) {
         res.json(e)
     }
-    
-
 })
 
 

@@ -8,17 +8,23 @@ class User {
 
     /**
      * Adding a user document to database
-     * @param {username, password} resgisterInfo
+     * @param {username, password} registerInfo
      * @returns {username, _id}
      */
-    static async register(resgisterInfo) {
+    static async register(registerInfo) {
         const db = getDb()
-        let user = await checkUserExist(resgisterInfo.username)
+        let user = await checkUserExist(registerInfo.username)
         console.log(user)
         if (!user) {
-            let hashed_pwd = await bcrypt.hash(resgisterInfo.password, BCRYPT_WORK_FACTOR)
-            let result = await db.collection('users').insertOne({ username: resgisterInfo.username, password: hashed_pwd })
-            return { username: resgisterInfo.username, userId: result.insertedId }
+            let hashed_pwd = await bcrypt.hash(registerInfo.password, BCRYPT_WORK_FACTOR)
+            let result = await db.collection('users').insertOne({
+                username: registerInfo.username,
+                password: hashed_pwd,
+                first_name: registerInfo.firstName,
+                last_name: registerInfo.lastName,
+                email: registerInfo.email
+            })
+            return { username: registerInfo.username, userId: result.insertedId }
         } else {
             throw new BadRequestError('Duplciate username')
         }
@@ -50,7 +56,8 @@ class User {
      */
     static async setAccessToken(id, accessToken) {
         const db = getDb()
-        await db.collection('users').updateOne({ _id: ObjectId(id) }, { $set: { access_token: accessToken } })
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, { $push: { access_token: accessToken } })
+        return res
     }
 
     /**
@@ -62,6 +69,19 @@ class User {
         const db = getDb()
         let res = await db.collection('users').findOne({ _id: ObjectId(id) })
         return res.access_token
+    }
+
+    /**
+     * Add a custom category to the user profile
+     * @param {string} category
+     * @param {string} id
+     * @param {string} color
+     * @returns {object}
+     */
+    static async setCategory(id, category, color = 'blue') {
+        const db = getDb()
+        let res = await db.collection('users').updateOne({ _id: ObjectId(id) }, { $push: { categories: { tag: category, color: color } } })
+        return res
     }
 }
 

@@ -1,0 +1,16 @@
+{
+    "user": {
+        "_id": "1234567890",
+        "username": "username",
+        "password": "password",
+        "access_token": ["token1", "token2"]
+    },
+    "transactions": {
+        "_id": "1234567890",
+        "transaction_id": "12345690",
+        "amount": "123",
+        "date": "YYYY-MM-DD",
+        "currency": "USD",
+        "user": "user_id"
+    }
+}

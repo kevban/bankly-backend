@@ -8,10 +8,7 @@ const { createToken } = require('../helpers/createJWT')
 router.post('/register', async function (req, res, next) {
     try {
         const data = req.body
-        let response = await User.register({
-            username: data.username,
-            password: data.password
-        })
+        let response = await User.register(data)
         const token = createToken(response)
         res.json({username: response.username, token});
     } catch (e) {
