@@ -4,7 +4,6 @@ const router = new express.Router()
 const { ensureLoggedIn } = require('../middleware/authenticate')
 const moment = require('moment')
 
-
 const {
     PLAID_PRODUCTS,
     PLAID_COUNTRY_CODES,
@@ -41,15 +40,26 @@ router.post('/create-link-token', [ensureLoggedIn], async function (req, res, ne
 
 // takes a public_token, and request an access token from plaid. Store it in the database
 // for that user.
+// returns the bank information of the connected data
 router.post('/set-access-token', [ensureLoggedIn], async function (req, res, next) {
     try {
         const PUBLIC_TOKEN = req.body.public_token;
-        console.log(PUBLIC_TOKEN)
         const tokenResponse = await plaid_client.itemPublicTokenExchange({
             public_token: PUBLIC_TOKEN
         });
         const ACCESS_TOKEN = tokenResponse.data.access_token
-        await User.setAccessToken(res.locals.user.userId, ACCESS_TOKEN)
+        const item = await plaid_client.itemGet({
+            access_token: ACCESS_TOKEN
+        })
+        console.log(item.data.item)
+        const institution = await plaid_client.institutionsGetById({
+            institution_id: item.data.item.institution_id,
+            country_codes: ['US', 'CA'],
+            options: {
+                include_optional_metadata: true
+            }
+        })
+        const result = await User.setAccessToken(res.locals.user.userId, ACCESS_TOKEN, institution.data.institution)
         res.json({
             message: 'success'
         })
@@ -75,7 +85,7 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
             const transactionArr = []
             accessTokens.map(async (accessToken) => {
                 const configs = {
-                    access_token: accessToken,
+                    access_token: accessToken.access_token,
                     start_date: startDate,
                     end_date: endDate,
                     options: {
@@ -104,9 +114,11 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
             throw new BadRequestError(`User ${res.locals.user.username} is not connected to a bank yet!`)
         }
     } catch (e) {
-        res.json(e)
+        next(e)
     }
 })
+
+
 
 
 module.exports = router

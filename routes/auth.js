@@ -5,12 +5,17 @@ const User = require('../models/user')
 const { BadRequestError } = require('../expressErrors')
 const { createToken } = require('../helpers/createJWT')
 
+/**
+ * Register a user
+ * Takes {username, first_name, last_name, password, email} as request
+ * Response: {user: {username, first_name, last_name, email}, token}
+ */
 router.post('/register', async function (req, res, next) {
     try {
         const data = req.body
-        let response = await User.register(data)
+        let user = await User.register(data)
         const token = createToken(response)
-        res.json({username: response.username, token});
+        res.json({user: {username: user.username, first_name: user.first_name, last_name: user.last_name, email: user.email}, token});
     } catch (e) {
         next(e)
     }
@@ -24,7 +29,7 @@ router.post('/login', async function (req, res, next) {
             password: data.password
         })
         const token = createToken(user)
-        res.json({username: user.username, userId: user._id, token})
+        res.json({user: {username: user.username, first_name: user.first_name, last_name: user.last_name, email: user.email}, token});
     } catch (e) {
         next(e)
     }

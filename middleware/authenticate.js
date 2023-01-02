@@ -10,13 +10,16 @@ const { SECRET_KEY } = require('../config');
  * It's not an error if no token was provided or if the token is not valid.
  */
 function authenticateJWT(req, res, next) {
+  
     try {
         if (req.headers && req.headers.token) {
             const token = req.headers.token;
+            console.log(token)
             res.locals.user = jwt.verify(token, SECRET_KEY)
         }
         next()
     } catch (e) {
+      console.log(e)
         next();
     }
 } 
