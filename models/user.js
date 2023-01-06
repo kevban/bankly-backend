@@ -1,6 +1,7 @@
 const { getDb } = require('../db')
 const { BCRYPT_WORK_FACTOR } = require('../config')
 const bcrypt = require('bcrypt')
+const getDefaultCategories = require('../helpers/defaultCategories')
 const { BadRequestError, UnauthorizedError } = require('../expressErrors')
 const { ObjectId } = require('mongodb')
 
@@ -13,7 +14,7 @@ class User {
      */
     static async register(registerInfo) {
         const db = getDb()
-        let user = await checkUserExist(registerInfo.username)
+        let user = await this.getUser(registerInfo.username)
         if (!user) {
             let hashed_pwd = await bcrypt.hash(registerInfo.password, BCRYPT_WORK_FACTOR)
             let result = await db.collection('users').insertOne({
@@ -21,13 +22,16 @@ class User {
                 password: hashed_pwd,
                 first_name: registerInfo.firstName,
                 last_name: registerInfo.lastName,
-                email: registerInfo.email
+                email: registerInfo.email,
+                categories: getDefaultCategories(),
+                tags: []
             })
             return {
                 username: registerInfo.username,
                 first_name: registerInfo.firstName,
                 last_name: registerInfo.lastName,
-                email: registerInfo.email
+                email: registerInfo.email,
+                user_id: result.insertedId
             }
         } else {
             throw new BadRequestError('Duplciate username')
@@ -40,7 +44,7 @@ class User {
      * @returns {_id, username}
      */
     static async login(loginInfo) {
-        let user = await checkUserExist(loginInfo.username)
+        let user = await this.getUser(loginInfo.username)
         if (user) {
             let result = await bcrypt.compare(loginInfo.password, user.password)
             if (result) {
@@ -48,7 +52,8 @@ class User {
                     username: user.username,
                     first_name: user.first_name,
                     last_name: user.last_name,
-                    email: user.email
+                    email: user.email,
+                    user_id: user._id
                 }
             } else {
                 throw new UnauthorizedError("Invalid password")
@@ -65,7 +70,7 @@ class User {
      */
     static async setAccessToken(id, accessToken, institution) {
         const db = getDb()
-        const bank = await checkBankExist(institution.institution_id)
+        const bank = await checkBankExist(id, institution.institution_id)
         if (bank) {
             const res = await db.collection('users').updateOne({ _id: ObjectId(id), "access_tokens.institution_id.institution_id": institution.institution_id }, {
                 $set: {
@@ -102,42 +107,64 @@ class User {
     static async getAccessToken(id) {
         const db = getDb()
         let res = await db.collection('users').findOne({ _id: ObjectId(id) })
-        return res.access_tokens
+        if (res) {
+            return res.access_tokens
+        } else {
+            return null
+        }
+    }
+
+    /**
+ * Get user information by username
+ * @param {string} username 
+ * @returns an object containing user information, or null if user does not exist
+ */
+    static async getUser(username) {
+        const db = getDb()
+        let result = await db.collection('users').findOne({ username: username })
+        return result
     }
 
     /**
      * Add a custom category to the user profile
-     * @param {string} category
-     * @param {string} id
-     * @param {string} color
+     * @param {object} category
      * @returns {object}
      */
-    static async setCategory(id, category, color = 'blue') {
+    static async addCategory(id, category) {
         const db = getDb()
-        let res = await db.collection('users').updateOne({ _id: ObjectId(id) }, { $push: { categories: { tag: category, color: color } } })
-        return res
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $push: {
+                categories:
+                {
+                    ...category
+                }
+            }
+        })
+    
     }
 }
 
-/**
- * Checks if the user exist by username
- * @param {string} username 
- * @returns an object containing user information, or null if user does not exist
- */
-async function checkUserExist(username) {
-    const db = getDb()
-    let result = await db.collection('users').findOne({ username: username })
-    return result
-}
+
+
 
 /**
  * Checks if the access token (bank) already exist
  * @param {string} institutionId
  * @returns an object containing bank information, or null if bakn does not exist
  */
-async function checkBankExist(institutionId) {
+async function checkBankExist(id, institutionId) {
     const db = getDb()
-    let result = await db.collection('users').findOne({ "access_tokens.institution.institution_id": institutionId })
-    return result
+    let res = await db.collection('users').findOne({ _id: ObjectId(id) })
+    const checkBank = (access_tokens, institutionId) => {
+        let bank = access_tokens.find(val => val.institution.institution_id === institutionId)
+        return bank
+    }
+    if (res && res.access_tokens) {
+        return checkBank(res.access_tokens, institutionId)
+    } else {
+        return null
+    }
 }
+
+
 module.exports = User

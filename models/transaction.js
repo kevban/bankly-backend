@@ -6,13 +6,21 @@ class Transaction {
 
     /**
      * Add a list of transaction to the database
+     * Does not add duplicate transactions with same id
      * @param {Array} transactions list of transaction objects
      * @returns {object} transaction count
      */
     static async add(transactions) {
         const db = getDb()
-        let result = await db.collection('transactions').insertMany(transactions)
-        return result;
+        transactions.forEach(transaction => {
+            db.collection('transactions').findOne({ transaction_id: transaction.transaction_id }, function (err, result) {
+                if (!result) {
+                    db.collection('transactions').insertOne(transaction, function (err, result) {
+                        console.log('Document inserted');
+                    });
+                }
+            });
+        })
     }
 
     /**
@@ -22,8 +30,10 @@ class Transaction {
      */
     static async get(userId) {
         const db = getDb()
-        let result = await db.collection('transactions').find({user_id: userId})
-        return result;
+        let result = await db.collection('transactions').find({ user_id: userId })
+        let resultArr = []
+        await result.forEach(val => resultArr.push(val))
+        return resultArr;
     }
 
 }

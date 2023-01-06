@@ -51,7 +51,6 @@ router.post('/set-access-token', [ensureLoggedIn], async function (req, res, nex
         const item = await plaid_client.itemGet({
             access_token: ACCESS_TOKEN
         })
-        console.log(item.data.item)
         const institution = await plaid_client.institutionsGetById({
             institution_id: item.data.item.institution_id,
             country_codes: ['US', 'CA'],
@@ -59,9 +58,10 @@ router.post('/set-access-token', [ensureLoggedIn], async function (req, res, nex
                 include_optional_metadata: true
             }
         })
-        const result = await User.setAccessToken(res.locals.user.userId, ACCESS_TOKEN, institution.data.institution)
+        const result = await User.setAccessToken(res.locals.user.user_id, ACCESS_TOKEN, institution.data.institution)
         res.json({
-            message: 'success'
+            message: 'success',
+            res: result
         })
     } catch (e) {
         next(e)
@@ -80,10 +80,11 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
         // 30 days transaction
         const startDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
         const endDate = moment().format('YYYY-MM-DD')
-        const accessTokens = await User.getAccessToken(res.locals.user.userId)
+        const accessTokens = await User.getAccessToken(res.locals.user.user_id)
         if (accessTokens) {
             const transactionArr = []
-            accessTokens.map(async (accessToken) => {
+            
+            for (let accessToken of accessTokens) {
                 const configs = {
                     access_token: accessToken.access_token,
                     start_date: startDate,
@@ -94,24 +95,25 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
                     }
                 };
                 const response = await plaid_client.transactionsGet(configs);
-                
-                if (response.transactions) {
-                    response.transactions.forEach(transaction => {
-                        const accountName = response.accounts.find(account => account.account_id === transaction.account_id).official_name;
+                if (response.data.transactions) {
+                    response.data.transactions.forEach(transaction => {
+                        const accountName = response.data.accounts.find(account => account.account_id === transaction.account_id).official_name;
                         const transactionObj = {
                             ...transaction,
-                            accounts: response.accounts,
                             account_name: accountName,
-                            user_id: res.locals.user.userId
+                            user_id: res.locals.user.user_id
                         }
                         transactionArr.push(transactionObj)
                     })
                 }
-            })
-            await Transaction.add(transactionArr)
+            }
+            if (transactionArr.length > 0) {
+                await Transaction.add(transactionArr)
+            }
+            
             res.json({transactions: transactionArr})
         } else {
-            throw new BadRequestError(`User ${res.locals.user.username} is not connected to a bank yet!`)
+            res.json({transactions: []})
         }
     } catch (e) {
         next(e)

@@ -14,8 +14,8 @@ router.post('/register', async function (req, res, next) {
     try {
         const data = req.body
         let user = await User.register(data)
-        const token = createToken(response)
-        res.json({user: {username: user.username, first_name: user.first_name, last_name: user.last_name, email: user.email}, token});
+        const token = createToken(user)
+        res.json({token});
     } catch (e) {
         next(e)
     }
@@ -29,7 +29,7 @@ router.post('/login', async function (req, res, next) {
             password: data.password
         })
         const token = createToken(user)
-        res.json({user: {username: user.username, first_name: user.first_name, last_name: user.last_name, email: user.email}, token});
+        res.json({token});
     } catch (e) {
         next(e)
     }
