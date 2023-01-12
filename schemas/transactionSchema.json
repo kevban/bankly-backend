@@ -1,0 +1,133 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "default": {},
+    "title": "Root Schema",
+    "required": [
+        "transaction_id",
+        "amount",
+        "date",
+        "name",
+        "category",
+        "bankly_category",
+        "account_name"
+    ],
+    "properties": {
+        "transaction_id": {
+            "type": "string",
+            "default": "",
+            "title": "The transaction_id Schema",
+            "examples": [
+                "fad7e312-bad7-427a-99a5-22814996b19f"
+            ]
+        },
+        "amount": {
+            "type": "number",
+            "default": 0.0,
+            "title": "The amount Schema",
+            "examples": [
+                134.26
+            ]
+        },
+        "date": {
+            "type": "string",
+            "default": "",
+            "title": "The date Schema",
+            "examples": [
+                "2023-01-11"
+            ]
+        },
+        "name": {
+            "type": "string",
+            "default": "",
+            "title": "The name Schema",
+            "examples": [
+                "Hotel parking ticket"
+            ]
+        },
+        "category": {
+            "type": "array",
+            "default": [],
+            "title": "The category Schema",
+            "items": {
+                "type": "string",
+                "title": "A Schema",
+                "examples": [
+                    "Hotel",
+                    "Parking"
+                ]
+            },
+            "examples": [
+                ["Hotel",
+                    "Parking"
+                ]
+            ]
+        },
+        "bankly_category": {
+            "type": "object",
+            "default": {},
+            "title": "The bankly_category Schema",
+            "required": [
+                "iconId",
+                "name",
+                "color"
+            ],
+            "properties": {
+                "iconId": {
+                    "type": "integer",
+                    "default": 0,
+                    "title": "The iconId Schema",
+                    "examples": [
+                        3
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The name Schema",
+                    "examples": [
+                        "Lodging"
+                    ]
+                },
+                "color": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The color Schema",
+                    "examples": [
+                        "#ff9800"
+                    ]
+                }
+            },
+            "examples": [{
+                "iconId": 3,
+                "name": "Lodging",
+                "color": "#ff9800"
+            }]
+        },
+        "account_name": {
+            "type": "string",
+            "default": "",
+            "title": "The account_name Schema",
+            "examples": [
+                "Cash"
+            ]
+        }
+    },
+    "examples": [{
+        "transaction_id": "fad7e312-bad7-427a-99a5-22814996b19f",
+        "amount": 134.26,
+        "date": "2023-01-11",
+        "name": "Hotel parking ticket",
+        "category": [
+            "Hotel",
+            "Parking"
+        ],
+        "bankly_category": {
+            "iconId": 3,
+            "name": "Lodging",
+            "color": "#ff9800"
+        },
+        "account_name": "Cash"
+    }]
+}

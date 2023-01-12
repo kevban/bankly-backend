@@ -3,6 +3,7 @@ const User = require('../models/user')
 const router = new express.Router()
 const { ensureLoggedIn } = require('../middleware/authenticate')
 const moment = require('moment')
+const getDefaultCategories = require('../helpers/defaultCategories')
 
 const {
     PLAID_PRODUCTS,
@@ -81,9 +82,9 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
         const startDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
         const endDate = moment().format('YYYY-MM-DD')
         const accessTokens = await User.getAccessToken(res.locals.user.user_id)
+        const rules = await User.getUser(res.locals.user.user_id).rules
         if (accessTokens) {
             const transactionArr = []
-            
             for (let accessToken of accessTokens) {
                 const configs = {
                     access_token: accessToken.access_token,
@@ -98,10 +99,12 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
                 if (response.data.transactions) {
                     response.data.transactions.forEach(transaction => {
                         const accountName = response.data.accounts.find(account => account.account_id === transaction.account_id).official_name;
+                        const rule = rules? rules.find(rule => transaction.name.includes(rule.contains)): {bankly_category: getDefaultCategories()[0]}
                         const transactionObj = {
                             ...transaction,
                             account_name: accountName,
-                            user_id: res.locals.user.user_id
+                            user_id: res.locals.user.user_id,
+                            bankly_category: rule.bankly_category
                         }
                         transactionArr.push(transactionObj)
                     })
@@ -119,6 +122,7 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
         next(e)
     }
 })
+
 
 
 

@@ -24,7 +24,8 @@ class User {
                 last_name: registerInfo.lastName,
                 email: registerInfo.email,
                 categories: getDefaultCategories(),
-                tags: []
+                tags: [],
+                rules: []
             })
             return {
                 username: registerInfo.username,
@@ -140,8 +141,90 @@ class User {
                 }
             }
         })
-    
+        return res
     }
+
+    /**
+     * Delete a custom category to the user profile by id
+     * @param {string} uuid id of the category
+     * @returns {object}
+     */
+    static async deleteCategory(id, uuid) {
+        const db = getDb()
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $pull: {
+                categories:
+                {
+                    id: uuid
+                }
+            }
+        })
+        return res
+    }
+
+    /**
+     * Add a custom tag to the user profile
+     * @param {name} name name of the tag
+     * @returns {object}
+     */
+    static async addTag(id, name) {
+        const db = getDb()
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $push: {
+                tags: name
+            }
+        })
+        return res
+    }
+
+    /**
+     * Delete a custom tag to the user profile by id
+     * @param {string} name name of the tag
+     * @returns {object}
+     */
+    static async deleteTag(id, name) {
+        const db = getDb()
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $pull: {
+                tags: name
+            }
+        })
+        return res
+    }
+
+    /**
+     * Adds a custom rule to the user profile by id
+     * @param {object} rule the rule object
+     * @returns {object}
+     */
+    static async addRule(id, rule) {
+        const db = getDb()
+        
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $push: {
+                rules: rule
+            }
+        })
+        return res
+    }
+
+    /**
+     * Deletes a custom rule to the user profile by id
+     * @param {string} contains the description which the rule contains
+     * @returns {object}
+     */
+    static async deleteRule(id, contains) {
+        const db = getDb()
+        const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            $pull: {
+                rules: {
+                    contains
+                }
+            }
+        })
+        return res
+    }
+
 }
 
 
