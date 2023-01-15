@@ -25,7 +25,7 @@ router.post('/transactions', ensureLoggedIn, async (req, res, next) => {
         const data = req.body
         if (jsonschema.validate(data, transactionSchema)) {
             const transactionObj = {
-                amount: data.amount,
+                amount: Number(data.amount),
                 bankly_category: data.bankly_category,
                 category: data.category,
                 date: data.date,
@@ -51,7 +51,7 @@ router.patch('/transactions', ensureLoggedIn, async (req, res, next) => {
         const data = req.body
         if (jsonschema.validate(data, transactionSchema)) {
             const transactionObj = {
-                amount: data.amount,
+                amount: Number(data.amount),
                 bankly_category: data.bankly_category,
                 category: data.category,
                 date: data.date,

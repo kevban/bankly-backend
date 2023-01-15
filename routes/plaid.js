@@ -82,7 +82,7 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
         const startDate = moment().subtract(30, 'days').format('YYYY-MM-DD')
         const endDate = moment().format('YYYY-MM-DD')
         const accessTokens = await User.getAccessToken(res.locals.user.user_id)
-        const rules = await User.getUser(res.locals.user.user_id).rules
+        const user = await User.getUser(res.locals.user.username)
         if (accessTokens) {
             const transactionArr = []
             for (let accessToken of accessTokens) {
@@ -99,7 +99,14 @@ router.get('/transactions', [ensureLoggedIn], async function (req, res, next) {
                 if (response.data.transactions) {
                     response.data.transactions.forEach(transaction => {
                         const accountName = response.data.accounts.find(account => account.account_id === transaction.account_id).official_name;
-                        const rule = rules? rules.find(rule => transaction.name.includes(rule.contains)): {bankly_category: getDefaultCategories()[0]}
+                        let rule = {bankly_category: getDefaultCategories()[0]}
+                        if (user.rules) {
+                            let matchingRule = user.rules.find(rule => transaction.name.toLowerCase().includes(rule.contains.toLowerCase()))
+                            if (matchingRule) {
+                                rule = matchingRule
+                            }
+                        }
+                        
                         const transactionObj = {
                             ...transaction,
                             account_name: accountName,
