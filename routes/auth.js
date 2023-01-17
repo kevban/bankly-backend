@@ -15,6 +15,7 @@ router.post('/register', async function (req, res, next) {
         const data = req.body
         let user = await User.register(data)
         const token = createToken(user)
+        console.log(token)
         res.json({token});
     } catch (e) {
         next(e)
@@ -29,6 +30,7 @@ router.post('/login', async function (req, res, next) {
             password: data.password
         })
         const token = createToken(user)
+        console.log(token)
         res.json({token});
     } catch (e) {
         next(e)
