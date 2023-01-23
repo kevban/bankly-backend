@@ -85,7 +85,7 @@ router.delete('/transactions', ensureLoggedIn, async (req, res, next) => {
 router.get('/', ensureLoggedIn, async (req, res, next) => {
     try {
         const result = await User.getUser(res.locals.user.username)
-        res.json({ ...result, password: null })
+        res.json({ ...result, password: null, access_tokens: null })
     } catch (e) {
         next(e)
     }

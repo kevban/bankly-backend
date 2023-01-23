@@ -11,6 +11,7 @@ const PORT = +process.env.PORT || 3001;
 // plaid variables
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_SECRET = process.env.PLAID_SECRET;
+const PLAID_SECRET_SANDBOX = process.env.PLAID_SECRET_SANDBOX;
 const PLAID_ENV = process.env.PLAID_ENV || 'sandbox';
 const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(',');
 const PLAID_COUNTRY_CODES = process.env.PLAID_COUNTRY_CODES.split(',')
@@ -27,7 +28,18 @@ const plaid_config = new Configuration({
     }
 })
 
+const plaid_config_sandbox = new Configuration({
+    basePath: PlaidEnvironments['sandbox'],
+    baseOptions: {
+        headers: {
+            'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
+            'PLAID-SECRET': PLAID_SECRET_SANDBOX
+        }
+    }
+})
+
 const plaid_client = new PlaidApi(plaid_config)
+const plaid_client_sandbox = new PlaidApi(plaid_config_sandbox)
 
 // Use dev database, testing database, or via env var, production database
 function getDatabaseUri() {
@@ -51,6 +63,7 @@ module.exports = {
   PLAID_REDIRECT_URI,
   PLAID_ANDROID_PACKAGE_NAME,
   plaid_client,
+  plaid_client_sandbox,
   plaid_config,
   getDatabaseUri,
 };

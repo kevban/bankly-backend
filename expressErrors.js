@@ -43,6 +43,12 @@
       super(message, 403);
     }
   }
+
+  class LinkUpdateError extends ExpressError {
+    constructor(message = "Item Needs Update") {
+      super(message, 400)
+    }
+  }
   
   module.exports = {
     ExpressError,

@@ -25,14 +25,16 @@ class User {
                 email: registerInfo.email,
                 categories: getDefaultCategories(),
                 tags: [],
-                rules: []
+                rules: [],
+                sandbox: registerInfo.sandbox || false
             })
             return {
                 username: registerInfo.username,
                 first_name: registerInfo.firstName,
                 last_name: registerInfo.lastName,
                 email: registerInfo.email,
-                user_id: result.insertedId
+                user_id: result.insertedId,
+                sandbox: registerInfo.sandbox
             }
         } else {
             throw new BadRequestError('Duplciate username')
