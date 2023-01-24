@@ -22,7 +22,7 @@ router.post('/create-link-token', [ensureLoggedIn], async function (req, res, ne
         user: {
             client_user_id: 'user-id'
         },
-        client_name: 'Piggy Bank',
+        client_name: 'Bank.ly',
         products: PLAID_PRODUCTS,
         country_codes: PLAID_COUNTRY_CODES,
         language: 'en'

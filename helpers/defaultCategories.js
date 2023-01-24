@@ -50,6 +50,11 @@ function getDefaultCategories() {
             name: 'Travel',
             color: '#ed6c02'
         },
+        {
+            iconId: 20,
+            name: 'Untracked',
+            color: '#181A26'
+        },
     ]
 }
 

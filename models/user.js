@@ -26,7 +26,8 @@ class User {
                 categories: getDefaultCategories(),
                 tags: [],
                 rules: [],
-                sandbox: registerInfo.sandbox || false
+                sandbox: registerInfo.sandbox || false,
+                connected: false
             })
             return {
                 username: registerInfo.username,
@@ -74,8 +75,9 @@ class User {
     static async setAccessToken(id, accessToken, institution) {
         const db = getDb()
         const bank = await checkBankExist(id, institution.institution_id)
+        let res;
         if (bank) {
-            const res = await db.collection('users').updateOne({ _id: ObjectId(id), "access_tokens.institution_id.institution_id": institution.institution_id }, {
+            res = await db.collection('users').updateOne({ _id: ObjectId(id), "access_tokens.institution_id.institution_id": institution.institution_id }, {
                 $set: {
                     "access_tokens.$":
                     {
@@ -84,9 +86,8 @@ class User {
                     }
                 }
             })
-            return res
         } else {
-            const res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
+            res = await db.collection('users').updateOne({ _id: ObjectId(id) }, {
                 $push: {
                     access_tokens:
                     {
@@ -95,9 +96,14 @@ class User {
                     }
                 }
             })
-
-            return res
         }
+        await db.collection('users').updateOne({_id: ObjectId(id)}, {
+            $set: {
+                connected: true
+            }
+        })
+        return res
+        
 
 
     }
