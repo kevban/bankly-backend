@@ -12,7 +12,7 @@ const { createToken } = require('../helpers/createJWT')
  */
 router.post('/register', async function (req, res, next) {
     try {
-        const data = req.body
+        const data = {...req.body, username: req.body.username.toLowerCase()}
         let user = await User.register(data)
         const token = createToken(user)
         console.log(token)
@@ -24,7 +24,7 @@ router.post('/register', async function (req, res, next) {
 
 router.post('/login', async function (req, res, next) {
     try {
-        const data = req.body
+        const data = {...req.body, username: req.body.username.toLowerCase()}
         let user = await User.login({
             username: data.username,
             password: data.password
