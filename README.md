@@ -1,7 +1,8 @@
 # Bank.ly Backend
-The Express, Node and MongoDB based backend for the personal finance budgeting app Bank.ly.
-[Bank.ly Web App](https://github.com/kevban/bankly-front)
-[Bank.ly Mobile](https://github.com/kevban/bankly-mobile)
+The Express, Node and MongoDB based backend for the personal finance budgeting app Bank.ly.  
+
+#### [Bank.ly Web App](https://github.com/kevban/bankly-front)  
+#### [Bank.ly Mobile](https://github.com/kevban/bankly-mobile)  
 
 ## What does the Bank.ly do?
 
@@ -29,4 +30,6 @@ The backend will now be running on `http://localhost:3001`.
 
 ## Other
 - This project was made for Springboard Capstone project 2
-- Also see: [Bank.ly Mobile](https://github.com/kevban/bankly-mobile), [Bankly Web](https://github.com/kevban/bankly-front)
+- Also see: 
+  - [Bank.ly Mobile](https://github.com/kevban/bankly-mobile)
+  - [Bankly Web](https://github.com/kevban/bankly-front)
